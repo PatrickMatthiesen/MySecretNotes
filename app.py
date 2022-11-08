@@ -90,11 +90,11 @@ def notes():
             db.commit()
             db.close()
         elif request.form['submit_button'] == 'import note':
-            noteid = request.form['noteid']
+            noteid = str(request.form['noteid'])
             db = connect_db()
             c = db.cursor()
             statement = "SELECT * from NOTES where publicID = ?;"
-            c.execute(statement, noteid)
+            c.execute(statement, [noteid])
             result = c.fetchall()
             if (len(result) > 0):
                 row = result[0]
