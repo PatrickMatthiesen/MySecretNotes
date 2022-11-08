@@ -90,7 +90,7 @@ def notes():
             db.commit()
             db.close()
         elif request.form['submit_button'] == 'import note':
-            noteid = str(request.form['noteid'])
+            noteid = request.form['noteid']
             db = connect_db()
             c = db.cursor()
             statement = "SELECT * from NOTES where publicID = ?;"
@@ -122,6 +122,7 @@ def login():
     error = ""
     if request.method == 'POST':
         username = request.form['username']
+        # password = hashlib.sha3_512(request.form['password']).hexdigest()
         password = request.form['password']
         db = connect_db()
         c = db.cursor()
@@ -152,17 +153,18 @@ def register():
         password = request.form['password']
         db = connect_db()
         c = db.cursor()
-        pass_statement = "SELECT * FROM users WHERE password = ?;"
+        # pass_statement = "SELECT * FROM users WHERE password = ?;"
         user_statement = "SELECT * FROM users WHERE username = ?;"
-        c.execute(pass_statement, password)
-        if (len(c.fetchall()) > 0):
-            errored = True
-            passworderror = "That password is already in use by someone else!"
+        # c.execute(pass_statement, [password])
+        # # it does not make sence to check if the password is already in the database
+        # if (len(c.fetchall()) > 0): # very insecure password check, dont show the user this ------------------
+        #     errored = True
+        #     passworderror = "That password is already in use by someone else!"
 
-        c.execute(user_statement, username)
+        c.execute(user_statement, [username])
         if (len(c.fetchall()) > 0):
             errored = True
-            usererror = "That username is already in use by someone else!"
+            usererror = "That username is already in use!"
 
         if (not errored):
             statement = "INSERT INTO users(id,username,password) VALUES(null,?,?);"
