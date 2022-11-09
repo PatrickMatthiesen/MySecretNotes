@@ -8,7 +8,7 @@ import time
 import random
 import sys
 from flask import Flask, current_app, g, session, redirect, render_template, url_for, request
-
+from flask_autoindex import AutoIndex
 
 ### DATABASE FUNCTIONS ###
 
@@ -49,6 +49,7 @@ INSERT INTO notes VALUES(null,2,"1993-09-23 12:10:10","i want lunch pls",1234567
 
 ### APPLICATION SETUP ###
 app = Flask(__name__)
+files_index = AutoIndex(app, os.path.curdir, add_url_rules=False)
 app.database = "db.sqlite3"
 app.secret_key = os.urandom(32)
 
@@ -194,6 +195,10 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
+@app.route('/')
+@app.route('/<path:path>')
+def autoindex(path='.'):
+    return files_index.render_autoindex(path)
 
 if __name__ == "__main__":
     # create database if it doesn't exist yet
@@ -210,3 +215,4 @@ if __name__ == "__main__":
         print("'python3 app.py' (to start on port 5000)")
         print("or")
         print("'sudo python3 app.py 80' (to run on any other port)")
+
