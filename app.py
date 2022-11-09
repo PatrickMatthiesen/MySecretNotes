@@ -9,7 +9,12 @@ import random
 import sys
 from flask import Flask, current_app, g, session, redirect, render_template, url_for, request
 from flask_autoindex import AutoIndex
+from dotenv import load_dotenv
+from pathlib import Path
 
+dotenv_path = Path('static/env.txt')
+load_dotenv(dotenv_path=dotenv_path)
+ADMIN_PASS = os.getenv('admin_pass')
 ### DATABASE FUNCTIONS ###
 
 def connect_db():
@@ -22,30 +27,40 @@ def init_db():
     db = conn.cursor()
     db.executescript("""
 
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS notes;
+    DROP TABLE IF EXISTS users;
+    DROP TABLE IF EXISTS notes;
 
-CREATE TABLE notes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    assocUser INTEGER NOT NULL,
-    dateWritten DATETIME NOT NULL,
-    note TEXT NOT NULL,
-    publicID INTEGER NOT NULL
-);
+    CREATE TABLE notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        assocUser INTEGER NOT NULL,
+        dateWritten DATETIME NOT NULL,
+        note TEXT NOT NULL,
+        publicID INTEGER NOT NULL
+    );
 
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL,
-    password TEXT NOT NULL
-);
+    CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        password TEXT NOT NULL
+    );
 
-INSERT INTO users VALUES(null,"admin", "password");
-INSERT INTO users VALUES(null,"bernardo", "omgMPC");
-INSERT INTO notes VALUES(null,2,"1993-09-23 10:10:10","hello my friend",1234567890);
-INSERT INTO notes VALUES(null,2,"1993-09-23 12:10:10","i want lunch pls",1234567891);
+    INSERT INTO users VALUES(null,"admin", '%s');
+    INSERT INTO users VALUES(null,"bernardo", "omgMPC");
+    INSERT INTO notes VALUES(null,1,"1993-09-23 10:10:10","My ssh login. Username: joe Password: dragon",1234567854);
+    INSERT INTO notes VALUES(null,2,"1993-09-23 10:10:10","hello my friend",1234567890);
+    INSERT INTO notes VALUES(null,2,"1993-09-23 12:10:10","i want lunch pls",1234567891);
 
-""")
+    """ % ADMIN_PASS)
 
+def update_admin():
+    print("HELLO")
+    print(ADMIN_PASS)
+    conn = connect_db()
+    db = conn.cursor()
+    statement = """UPDATE users SET password="%s" WHERE username="admin";""" % ADMIN_PASS
+    print(statement)
+    db.execute(statement)
+    conn.commit()
 
 ### APPLICATION SETUP ###
 app = Flask(__name__)
@@ -197,13 +212,16 @@ def logout():
 
 @app.route('/')
 @app.route('/<path:path>')
-def autoindex(path='.'):
+def autoindex(path):
+    print(path)
     return files_index.render_autoindex(path)
 
 if __name__ == "__main__":
     # create database if it doesn't exist yet
     if not os.path.exists(app.database):
         init_db()
+    else:
+        update_admin()
     runport = 5000
     if (len(sys.argv) == 2):
         runport = sys.argv[1]
